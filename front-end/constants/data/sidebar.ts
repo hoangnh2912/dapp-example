@@ -11,19 +11,20 @@ export interface SideBarDataProps {
 }
 
 export const SideBarData: Array<SideBarDataProps> = [
-  { name: "Token creator", icon: BsCoin, link: "/token-creator" },
-  {
-    name: "Stealth Address",
-    icon: BsEmojiSunglasses,
-    link: "/stealth-address",
-  },
-  {
-    name: "AMM",
-    icon: MdOutlineSwapHorizontalCircle,
-    link: "/amm",
-    disabled: true,
-  },
-  { name: "Staking", icon: GiPayMoney, link: "/staking", disabled: true },
-  { name: "Renting", icon: GiClockwork, link: "/renting", disabled: true },
-  { name: "DAO", icon: BsPeople, link: "/dao", disabled: true },
+  { name: "NFT", icon: BsCoin, link: "/nft" },
+  // { name: "Token creator", icon: BsCoin, link: "/token-creator" },
+  // {
+  //   name: "Stealth Address",
+  //   icon: BsEmojiSunglasses,
+  //   link: "/stealth-address",
+  // },
+  // {
+  //   name: "AMM",
+  //   icon: MdOutlineSwapHorizontalCircle,
+  //   link: "/amm",
+  //   disabled: true,
+  // },
+  // { name: "Staking", icon: GiPayMoney, link: "/staking", disabled: true },
+  // { name: "Renting", icon: GiClockwork, link: "/renting", disabled: true },
+  // { name: "DAO", icon: BsPeople, link: "/dao", disabled: true },
 ];

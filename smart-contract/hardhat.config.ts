@@ -20,6 +20,10 @@ module.exports = {
       url: process.env.NETWORK_RPC,
       accounts: [`${PRIVATE_KEY}`],
     },
+    mumbai: {
+      url: process.env.NETWORK_RPC,
+      accounts: [`${PRIVATE_KEY}`],
+    },
     local: {
       url: "http://127.0.0.1:8545",
       accounts: [PRIVATE_KEY],

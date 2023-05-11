@@ -1,8 +1,8 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import { Mumbai } from "@thirdweb-dev/chains";
 import {
-  metamaskWallet,
   ThirdwebProvider,
+  metamaskWallet,
   walletConnect,
 } from "@thirdweb-dev/react";
 import { StoreProvider } from "easy-peasy";
