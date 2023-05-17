@@ -1,8 +1,8 @@
-import { Constant, logger } from '@constants';
-import { Synchronize } from '@schemas';
+import { logger } from '@constants';
+import { NFT, Synchronize } from '@schemas';
 import cron from 'node-cron';
 import { EventData } from 'web3-eth-contract';
-import { MarketContract, getBlockByNumber, web3 } from '.';
+import { nftContract, web3 } from '.';
 
 const globalVariable: any = global;
 
@@ -19,7 +19,7 @@ const onJobGetDataFromSmartContract = async () => {
 
     if (!lastSynchronize?.last_block_number) {
       await Synchronize.create({
-        last_block_number: 33395644,
+        last_block_number: 35649102,
       });
       globalVariable.isSyncingGetDataFromSmartContract = false;
       return;
@@ -30,7 +30,7 @@ const onJobGetDataFromSmartContract = async () => {
       last_block_number + 100000,
     );
     logger.info(`Synchronizing from ${last_block_number} to ${last_block_number_onchain}`);
-    await synchronizeMarket(last_block_number, last_block_number_onchain, listTxHash);
+    await synchronizeNFT(last_block_number, last_block_number_onchain, listTxHash);
     if (listTxHash.length > 0) {
       await Synchronize.create({
         last_block_number: last_block_number_onchain,
@@ -54,77 +54,45 @@ const onJobGetDataFromSmartContract = async () => {
 const sortByTransactionIndex = (a: EventData, b: EventData) =>
   a.transactionIndex - b.transactionIndex;
 
-const synchronizeMarket = async (
+const synchronizeNFT = async (
   last_block_number_sync: number,
   last_block_number_onchain: number,
   listTxHash: string[],
 ) => {
-  const marketService = {
-    listSong: async (...args: any) => {
-      console.log(`listSong: ${args}`);
-    },
-    createBuyHistory: async (...args: any) => {
-      console.log(`createBuyHistory: ${args}`);
-    },
-  };
   const getPastEventsConfig = {
     fromBlock: last_block_number_sync,
     toBlock: last_block_number_onchain,
   };
-  const [eventListSong, eventBuySong] = await Promise.all([
-    MarketContract.getPastEvents(Constant.MUSIC_MARKET_EVENT.ListSong, getPastEventsConfig),
-    MarketContract.getPastEvents(Constant.MUSIC_MARKET_EVENT.BuySong, getPastEventsConfig),
-  ]);
-  logger.info(`Synchronizing ${eventListSong.length} list song events`);
-  logger.info(`Synchronizing ${eventBuySong.length} buy song events`);
-  const listListSongUpdate = eventListSong.sort(sortByTransactionIndex).map(e => ({
-    id: e.returnValues['id'],
-    seller: e.returnValues['seller'],
-    price: web3.utils.fromWei(e.returnValues['price'], 'ether'),
-    amount: e.returnValues['amount'],
-    uri: e.returnValues['uri'],
+  const eventTransfer = await nftContract.getPastEvents('Transfer', getPastEventsConfig);
+  logger.info(`Synchronizing ${eventTransfer.length} transfer events`);
+
+  const listTransfer = eventTransfer.sort(sortByTransactionIndex).map(e => ({
+    from: e.returnValues['from'],
+    to: e.returnValues['to'],
+    tokenId: e.returnValues['tokenId'],
     transactionHash: e.transactionHash,
     blockNumber: e.blockNumber,
   }));
 
-  const listBuySongUpdate = eventBuySong.sort(sortByTransactionIndex).map(e => ({
-    id: e.returnValues['id'],
-    buyer: e.returnValues['buyer'],
-    transactionHash: e.transactionHash,
-    blockNumber: e.blockNumber,
-  }));
+  listTxHash.push(...eventTransfer.map(e => e.transactionHash));
 
-  listTxHash.push(...eventListSong.map(e => e.transactionHash));
-  listTxHash.push(...eventBuySong.map(e => e.transactionHash));
-
-  for (const priceUpdate of listListSongUpdate) {
+  for (const transferUpdate of listTransfer) {
     try {
-      const blockData = await getBlockByNumber(priceUpdate.blockNumber);
-      await marketService.listSong(
-        priceUpdate.id,
-        priceUpdate.seller.toLowerCase(),
-        priceUpdate.price,
-        priceUpdate.amount,
-        priceUpdate.uri,
-        priceUpdate.transactionHash,
-        blockData.timestamp,
+      const uri = await nftContract.methods.tokenURI(transferUpdate.tokenId).call();
+
+      await NFT.findOneAndUpdate(
+        { token_id: transferUpdate.tokenId },
+        {
+          name: uri,
+          image: '',
+          description: '',
+          owner: transferUpdate.to,
+          updated_at: new Date(),
+        },
+        { upsert: true },
       );
     } catch (error: any) {
-      logger.error(`Can not update market for music: ${priceUpdate.id}, error: ${error.message}`);
-    }
-  }
-
-  for (const buyUpdate of listBuySongUpdate) {
-    try {
-      const blockData = await getBlockByNumber(buyUpdate.blockNumber);
-      await marketService.createBuyHistory(
-        buyUpdate.id,
-        buyUpdate.buyer,
-        buyUpdate.transactionHash,
-        blockData.timestamp,
-      );
-    } catch (error: any) {
-      logger.error(`Can not update market for music: ${buyUpdate.id}, error: ${error.message}`);
+      logger.error(`Can not update nft: ${transferUpdate.tokenId}, error: ${error.message}`);
     }
   }
 };

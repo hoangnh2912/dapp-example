@@ -18,9 +18,9 @@ async function main() {
     }[];
   }[] = [
     {
-      name: "SCI",
-      args: [],
-      path: "token",
+      name: "NFT",
+      args: ["Book", "bk"],
+      path: "nft",
     },
   ];
   let contractDeployed: any = {};
@@ -79,7 +79,7 @@ async function main() {
       }
     }
   }
-  fs.writeFileSync("./abi-music.json", JSON.stringify(contractDeployed));
+  fs.writeFileSync("./abi.json", JSON.stringify(contractDeployed));
 }
 
 main()

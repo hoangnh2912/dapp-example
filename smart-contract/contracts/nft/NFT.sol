@@ -4,31 +4,22 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract NFT is ERC721 {
-    struct NFTData {
-        uint256 tokenId;
-        string name;
-        string description;
-        string image;
-    }
-
-    mapping(uint256 => NFTData) _data;
+    mapping(uint => string) uris;
 
     constructor(
         string memory name,
         string memory symbol
     ) ERC721(name, symbol) {}
 
-    function mint(
-        uint256 tokenId,
-        string calldata name,
-        string calldata des,
-        string calldata image
-    ) external {
+    function mint(uint256 tokenId, string calldata _uri) external {
         _mint(msg.sender, tokenId);
-        _data[tokenId] = NFTData(tokenId, name, des, image);
+        uris[tokenId] = _uri;
     }
 
-    function tokenData(uint256 tokenId) public view returns (NFTData memory) {
-        return _data[tokenId];
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+        return uris[tokenId];
     }
 }

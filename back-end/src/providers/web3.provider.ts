@@ -1,4 +1,4 @@
-import { ABI_MUSIC } from '@constants';
+import { ABI_NFT } from '@constants';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract/types/index';
 
@@ -12,6 +12,6 @@ const getBlockByNumber = async (blockNumber: number) => {
   return await web3.eth.getBlock(blockNumber);
 };
 
-const MarketContract = newContract(ABI_MUSIC.MusicMarket.abi, ABI_MUSIC.MusicMarket.address);
+const nftContract = newContract(ABI_NFT.NFT.abi, ABI_NFT.NFT.address);
 
-export { web3, newContract, MarketContract, getBlockByNumber };
+export { web3, newContract, nftContract, getBlockByNumber };
